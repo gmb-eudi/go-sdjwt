@@ -1,1 +1,23 @@
 # go-sdjwt
+
+SD-JWT and SD-JWT VC for the EUDI Wallet ecosystem in Go: combined-format
+parsing, disclosure digest verification, issuer-JWS and Key-Binding-JWT
+verification, status-list reference extraction, and an Issue + PresentKB
+façade for issuers and test wallets.
+
+- Framework-free; all cryptography delegated to
+  github.com/gmb-eudi/go-eudi-crypto (ECCG-pinned policy; algorithms are
+  derived from keys/policy, never chosen by tokens). No algorithm literals.
+- Verify: split combined format, verify issuer JWS, enforce typ/iss/vct/
+  validity/cnf, reconstruct disclosed claims by digest, verify KB-JWT,
+  extract status reference.
+- typ dc+sd-jwt enforced; legacy vc+sd-jwt accepted only behind an explicit
+  compatibility option.
+- Two façades so selective-disclosure logic never forks between issuer and
+  verifier.
+
+Implemented specs: draft-ietf-oauth-selective-disclosure-jwt,
+draft-ietf-oauth-sd-jwt-vc (dc+sd-jwt), HAIP 1.0 SD-JWT VC profile, ARF 2.9
+§6.6.3.6/6.6.3.8. See SPECREFS.md for pinned versions.
+
+Status: pre-v1. API frozen no earlier than OIDF conformance pass.

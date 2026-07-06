@@ -1,5 +1,6 @@
-// Package sdjwt implements SD-JWT (draft-ietf-oauth-selective-disclosure-jwt)
-// and SD-JWT VC (draft-ietf-oauth-sd-jwt-vc, dc+sd-jwt): combined-format
+// Package sdjwt implements SD-JWT (RFC 9901, finalized from
+// draft-ietf-oauth-selective-disclosure-jwt) and SD-JWT VC
+// (draft-ietf-oauth-sd-jwt-vc, dc+sd-jwt): combined-format
 // parsing, disclosure digest verification, issuer-JWS and Key-Binding-JWT
 // verification, status-list reference extraction, and an Issue + PresentKB
 // façade for issuers and test wallets.

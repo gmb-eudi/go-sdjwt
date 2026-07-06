@@ -16,8 +16,9 @@ façade for issuers and test wallets.
 - Two façades so selective-disclosure logic never forks between issuer and
   verifier.
 
-Implemented specs: draft-ietf-oauth-selective-disclosure-jwt,
-draft-ietf-oauth-sd-jwt-vc (dc+sd-jwt), HAIP 1.0 SD-JWT VC profile, ARF 2.9
-§6.6.3.6/6.6.3.8. See SPECREFS.md for pinned versions.
+Implemented specs: SD-JWT (RFC 9901, finalized from
+draft-ietf-oauth-selective-disclosure-jwt), draft-ietf-oauth-sd-jwt-vc
+(dc+sd-jwt), HAIP 1.0 SD-JWT VC profile, ARF 2.9 §6.6.3.6/6.6.3.8. See
+SPECREFS.md for pinned versions.
 
 Status: pre-v1. API frozen no earlier than OIDF conformance pass.

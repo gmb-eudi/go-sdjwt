@@ -106,7 +106,15 @@ func (i *Issuer) Issue(ctx context.Context, tmpl CredentialTemplate) ([]byte, er
 		// (hard rule 3 / GDPR; same discipline as decodeJSONObject in verify.go).
 		return nil, fmt.Errorf("%w: payload not JSON-serializable", ErrTemplate)
 	}
-	issuerJWT, err := eudicrypto.SignJWS(ctx, i.kp, i.keyID, map[string]any{hdrTyp: typSDJWT}, body)
+	// x5c is embedded when the Issuer was built WithChain (RFC 7515 §4.1.6),
+	// letting a verifier resolve the issuer key from the chain (against a trust
+	// anchor) before verifying. go-eudi-crypto.SignJWS handles the DER→base64
+	// encoding; keyID/alg still come from the signer, never from the chain.
+	protected := map[string]any{hdrTyp: typSDJWT}
+	if len(i.chain) > 0 {
+		protected["x5c"] = i.chain
+	}
+	issuerJWT, err := eudicrypto.SignJWS(ctx, i.kp, i.keyID, protected, body)
 	if err != nil {
 		return nil, err
 	}

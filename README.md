@@ -15,6 +15,15 @@ façade for issuers and test wallets.
   compatibility option.
 - Two façades so selective-disclosure logic never forks between issuer and
   verifier.
+- `NewIssuer(kp, keyID, WithChain(chain))` embeds an x5c certificate chain
+  (leaf first) in every issued credential's JWS header (RFC 7515 §4.1.6); the
+  two-argument `NewIssuer(kp, keyID)` is unchanged and embeds no x5c.
+- `Peek([]byte) (*PeekResult, error)` is a pre-trust structural read: it
+  returns typ / x5c chain / iss / vct / disclosure count WITHOUT verifying the
+  signature, digests, or validity, so a caller can resolve the issuer key from
+  the x5c chain (against a trust anchor) BEFORE calling Verify with that key
+  (ADR-0004: key resolution/trust stays outside this library). NEVER trust a
+  PeekResult directly — verify with Verify first.
 
 Implemented specs: SD-JWT (RFC 9901, finalized from
 draft-ietf-oauth-selective-disclosure-jwt), draft-ietf-oauth-sd-jwt-vc

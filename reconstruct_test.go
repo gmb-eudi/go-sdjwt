@@ -28,7 +28,7 @@ func TestHashForSDAlg(t *testing.T) {
 }
 
 // Positive: an object with a nested object and an array reconstructs exactly.
-// Mirrors the SD-JWT §7 processing example (synthetic vector; ADR-0007).
+// Mirrors the [SD-JWT §7] processing example (synthetic vector).
 func TestReconstructPositive(t *testing.T) {
 	dGiven, digGiven := mkDisclosure(t, "s0", "given_name", "Arthur")
 	dStreet, digStreet := mkDisclosure(t, "s1", "street_address", "42 Market Street")
@@ -111,7 +111,7 @@ func TestReconstructDecoysCounted(t *testing.T) {
 // Array decoys: an array-element wrapper {"...": <digest>} with no matching
 // disclosure is omitted from the reconstructed array and counted, mirroring
 // TestReconstructDecoysCounted's coverage of the object _sd decoy path
-// (SD-JWT §4.2.5).
+// ([SD-JWT §4.2.5]).
 func TestReconstructArrayDecoysCounted(t *testing.T) {
 	payload := map[string]any{
 		"tags": []any{
@@ -211,8 +211,8 @@ func TestReconstructNegatives(t *testing.T) {
 	// A duplicated digest is rejected even when neither occurrence has a
 	// matching disclosure (decoys): the SD-JWT digest namespace must stay
 	// 1:1 payload-wide, or a repeated string could be used to smuggle
-	// ambiguity into later processing (fail closed, hard rule 7). See
-	// WP-02 README Decisions.
+	// ambiguity into later processing (fail closed). See the
+	// README Decisions section.
 	t.Run("duplicate decoy digest (no matching disclosure) rejected", func(t *testing.T) {
 		payload := map[string]any{claimSD: []any{"AAAAdecoyAAAA", "AAAAdecoyAAAA"}}
 		_, _, err := reconstruct(payload, nil, sha256Hash())
@@ -265,10 +265,10 @@ func TestReconstructNegatives(t *testing.T) {
 		}
 	})
 
-	// SD-JWT §4.2.2 reserves "..." exclusively for the array-element digest
+	// [SD-JWT §4.2.2] reserves "..." exclusively for the array-element digest
 	// wrapper ({"...": "<digest>"}). A literal "..." key in a plain JSON
 	// object is not that wrapper — it must be rejected rather than silently
-	// surfaced as a claim named "..." (fail closed, hard rule 7). No
+	// surfaced as a claim named "..." (fail closed). No
 	// conformant issuer ever emits this.
 	t.Run("literal \"...\" object key rejected", func(t *testing.T) {
 		payload := map[string]any{claimEllipsis: "not-a-digest-wrapper"}
@@ -279,7 +279,7 @@ func TestReconstructNegatives(t *testing.T) {
 	})
 
 	// An array-element "..." wrapper must be exactly {"...": "<digest>"}
-	// (SD-JWT §4.2.2). An element carrying "..." alongside any other key is
+	// ([SD-JWT §4.2.2]). An element carrying "..." alongside any other key is
 	// ambiguous — neither a clean digest wrapper nor ordinary data — and must
 	// be rejected rather than passed through as a regular array element.
 	t.Run("array element with \"...\" plus extra key rejected", func(t *testing.T) {
@@ -301,7 +301,7 @@ func TestReconstructNegatives(t *testing.T) {
 		}
 	})
 
-	// hard rule 3 / GDPR: a *json.SyntaxError for this input would read
+	// GDPR (no attribute values in errors): a *json.SyntaxError for this input would read
 	// `invalid character 'S' looking for beginning of value` — "S" is the
 	// first byte of the decoded disclosure content ([salt, name, value]).
 	// That byte (and the sentinel word it starts) must never reach the

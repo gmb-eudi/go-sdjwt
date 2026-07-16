@@ -8,7 +8,7 @@ import (
 
 // Issuer signs SD-JWT / SD-JWT VC credentials. It is the counterpart of
 // Verifier and is reused by the future OpenID4VCI issuer and by
-// internal/testwallet (WP-09). Construct with NewIssuer.
+// internal/testwallet. Construct with NewIssuer.
 type Issuer struct {
 	kp    eudicrypto.KeyProvider
 	keyID string
@@ -21,7 +21,7 @@ type Issuer struct {
 type IssuerOption func(*Issuer)
 
 // WithChain attaches an x5c certificate chain (leaf first) that Issue embeds in
-// every issued credential's JWS protected header (RFC 7515 §4.1.6), so a
+// every issued credential's JWS protected header ([RFC 7515 §4.1.6]), so a
 // verifier can resolve the issuer key from the chain (against a trust anchor)
 // before verifying. Optional — an Issuer with no chain configured issues
 // exactly as today (no x5c member).

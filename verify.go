@@ -11,12 +11,12 @@ import (
 	eudicrypto "github.com/gmb-eudi/go-eudi-crypto"
 )
 
-// Verify verifies an SD-JWT / SD-JWT VC presentation (SD-JWT §7; SD-JWT VC
-// §3). Pipeline: split combined format → verify issuer JWS (go-eudi-crypto,
+// Verify verifies an SD-JWT / SD-JWT VC presentation ([SD-JWT §7]; [SD-JWT VC §3]).
+// Pipeline: split combined format → verify issuer JWS (go-eudi-crypto,
 // alg derived from IssuerKey) → enforce typ → require iss/vct → check
 // validity window → extract cnf holder key → reconstruct disclosed claims by
-// digest → compute sd_hash → verify KB-JWT (SD-JWT §4.3, T-02.5) → extract
-// the status_list reference (Token Status List §5, T-02.6). Fail closed: any
+// digest → compute sd_hash → verify KB-JWT ([SD-JWT §4.3]) → extract
+// the status_list reference ([Token Status List §5]). Fail closed: any
 // failed check returns a distinct typed error and no VerifiedCredential.
 func (v *Verifier) Verify(ctx context.Context, in VerifyInput) (*VerifiedCredential, error) {
 	_ = ctx // reserved for propagation; this library performs no I/O
@@ -36,7 +36,7 @@ func (v *Verifier) Verify(ctx context.Context, in VerifyInput) (*VerifiedCredent
 	if err != nil {
 		return nil, err
 	}
-	// SD-JWT VC §3.2: iss and vct are required.
+	// [SD-JWT VC §3.2]: iss and vct are required.
 	iss, _ := payload[claimISS].(string)
 	if iss == "" {
 		return nil, fmt.Errorf("%w", ErrMissingIssuer)
@@ -49,7 +49,7 @@ func (v *Verifier) Verify(ctx context.Context, in VerifyInput) (*VerifiedCredent
 	if err := v.checkValidity(payload, vc); err != nil {
 		return nil, err
 	}
-	// cnf holder-binding key (RFC 7800; SD-JWT VC §3.5).
+	// cnf holder-binding key (RFC 7800; [SD-JWT VC §3.5]).
 	holderKey, err := extractCNF(payload)
 	if err != nil {
 		return nil, err
@@ -58,7 +58,7 @@ func (v *Verifier) Verify(ctx context.Context, in VerifyInput) (*VerifiedCredent
 		return nil, fmt.Errorf("%w", ErrMissingCNF)
 	}
 	vc.CNF = holderKey
-	// Reconstruct disclosed claims (SD-JWT §7).
+	// Reconstruct disclosed claims ([SD-JWT §7]).
 	h, err := hashForSDAlg(v.policy, payload)
 	if err != nil {
 		return nil, err
@@ -70,10 +70,10 @@ func (v *Verifier) Verify(ctx context.Context, in VerifyInput) (*VerifiedCredent
 	vc.Claims = claims
 	vc.DecoyDigests = decoys
 	// sd_hash over the presented issuer-JWT + disclosures (audit; also the
-	// value the KB-JWT must match — SD-JWT §4.3).
+	// value the KB-JWT must match — [SD-JWT §4.3]).
 	vc.SDHash = digest(p.sdPart, h)
 
-	// KB-JWT (SD-JWT §4.3; HAIP requires it). A present KB is always
+	// KB-JWT ([SD-JWT §4.3]; HAIP requires it). A present KB is always
 	// verified; RequireKB additionally makes its absence an error.
 	if in.RequireKB || p.kb != nil {
 		if p.kb == nil {
@@ -87,7 +87,7 @@ func (v *Verifier) Verify(ctx context.Context, in VerifyInput) (*VerifiedCredent
 		}
 	}
 
-	// Status list reference (IETF Token Status List §5). Malformed = error.
+	// Status list reference ([Token Status List §5]). Malformed = error.
 	status, err := extractStatus(payload)
 	if err != nil {
 		return nil, err
@@ -97,7 +97,7 @@ func (v *Verifier) Verify(ctx context.Context, in VerifyInput) (*VerifiedCredent
 	return vc, nil
 }
 
-// checkTyp enforces the SD-JWT VC typ header (SD-JWT VC §3.2.1): dc+sd-jwt,
+// checkTyp enforces the SD-JWT VC typ header ([SD-JWT VC §3.2.1]): dc+sd-jwt,
 // or legacy vc+sd-jwt only when WithLegacyVCTyp was set.
 func (v *Verifier) checkTyp(hdr eudicrypto.Header) error {
 	t, _ := hdr[hdrTyp].(string)
@@ -164,7 +164,7 @@ func extractCNF(payload map[string]any) (stdcrypto.PublicKey, error) {
 }
 
 // decodeJSONObject decodes a JWT payload as a JSON object, numbers preserved.
-// Trailing bytes after the object are rejected (M-2, mirroring
+// Trailing bytes after the object are rejected (mirroring
 // decodeDisclosure's dec.More() guard in disclosure.go) — defense in depth
 // only, since a JWT payload is signature-bound and so not attacker-mutable
 // independent of the signature, but the two decoders should agree.
@@ -175,7 +175,7 @@ func decodeJSONObject(b []byte) (map[string]any, error) {
 	if err := dec.Decode(&m); err != nil {
 		// Static suffix only: a *json.SyntaxError's message can echo a byte of
 		// the decoded payload (which carries claim values) — never wrap the
-		// underlying err (hard rule 3 / GDPR; same discipline as
+		// underlying err (no attribute values in errors — GDPR; same discipline as
 		// decodeDisclosure in disclosure.go).
 		return nil, fmt.Errorf("%w: payload is not valid JSON", ErrMalformed)
 	}

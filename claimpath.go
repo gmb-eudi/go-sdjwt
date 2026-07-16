@@ -2,18 +2,18 @@ package sdjwt
 
 // ClaimPath identifies a selectively-disclosable claim in an SD-JWT for
 // presentation (PresentKB). Elements are object keys (string) or array
-// indices (non-negative int), mirroring the OpenID4VP §7 claims path pointer
+// indices (non-negative int), mirroring the [OID4VP §7] claims path pointer
 // JSON shape. It is defined locally so this format library stays independent
 // of the protocol layer: go-dcql owns a parallel ClaimPath ([]PathElement)
-// and the two are reconciled at the go-oid4vp boundary (WP-08). go-sdjwt does
-// NOT import go-dcql (docs/libraries.md layering; ADR-0004 reuse goal).
+// and the two are reconciled at the go-oid4vp boundary. go-sdjwt does
+// NOT import go-dcql (layering: avoids a go-sdjwt->go-dcql dependency cycle).
 type ClaimPath []any
 
 // Path builds a ClaimPath from string keys and int indices.
 func Path(elems ...any) ClaimPath { return ClaimPath(elems) }
 
 // valid reports whether every element is a string key or a non-negative int
-// index, and the path is non-empty (OID4VP §7).
+// index, and the path is non-empty ([OID4VP §7]).
 func (p ClaimPath) valid() bool {
 	if len(p) == 0 {
 		return false

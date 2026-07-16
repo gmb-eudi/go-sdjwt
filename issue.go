@@ -24,7 +24,7 @@ var reservedClaims = map[string]bool{
 // with the Issuer's key. Claims listed in tmpl.Selective are blinded into
 // _sd digests (objects) / "..." wrappers (arrays); everything else is in the
 // clear. Disclosures are emitted sorted (order-independent for verification;
-// avoids leaking insertion order). SD-JWT §4; SD-JWT VC §3.
+// avoids leaking insertion order). [SD-JWT §4]; [SD-JWT VC §3].
 func (i *Issuer) Issue(ctx context.Context, tmpl CredentialTemplate) ([]byte, error) {
 	if tmpl.VCT == "" || tmpl.Issuer == "" {
 		return nil, fmt.Errorf("%w: vct and iss are required", ErrTemplate)
@@ -45,7 +45,7 @@ func (i *Issuer) Issue(ctx context.Context, tmpl CredentialTemplate) ([]byte, er
 	// The hash used for digests must match what a verifier derives from the
 	// persisted _sd_alg (hashForSDAlg: absent claim = policy default). Passing
 	// the same name (possibly "") through HashForName keeps the two in lock
-	// step without a hash-name literal here (hard rule 4).
+	// step without a hash-name literal here (no hard-coded algorithm literal).
 	h, err := eudicrypto.ECCG().HashForName(tmpl.HashName)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrTemplate, err)
@@ -73,7 +73,7 @@ func (i *Issuer) Issue(ctx context.Context, tmpl CredentialTemplate) ([]byte, er
 	// Registered members (in the clear).
 	if tmpl.HashName != "" {
 		payload[claimSDAlg] = tmpl.HashName
-	} // else: omit _sd_alg — SD-JWT §4.1.1 treats absence as the policy default.
+	} // else: omit _sd_alg — [SD-JWT §4.1.1] treats absence as the policy default.
 	payload[claimISS] = tmpl.Issuer
 	payload[claimVCT] = tmpl.VCT
 	if !tmpl.IssuedAt.IsZero() {
@@ -103,10 +103,10 @@ func (i *Issuer) Issue(ctx context.Context, tmpl CredentialTemplate) ([]byte, er
 		// Static suffix only: a *json.UnsupportedValueError (e.g. NaN) embeds
 		// the offending claim value in its message, and *json.MarshalerError
 		// embeds nested error text — never wrap the underlying err
-		// (hard rule 3 / GDPR; same discipline as decodeJSONObject in verify.go).
+		// (no attribute values in errors — GDPR; same discipline as decodeJSONObject in verify.go).
 		return nil, fmt.Errorf("%w: payload not JSON-serializable", ErrTemplate)
 	}
-	// x5c is embedded when the Issuer was built WithChain (RFC 7515 §4.1.6),
+	// x5c is embedded when the Issuer was built WithChain ([RFC 7515 §4.1.6]),
 	// letting a verifier resolve the issuer key from the chain (against a trust
 	// anchor) before verifying. go-eudi-crypto.SignJWS handles the DER→base64
 	// encoding; keyID/alg still come from the signer, never from the chain.
@@ -206,7 +206,7 @@ func (b *sdBuilder) discloseObject(name string, value any) (enc, dig string, err
 	raw, err := json.Marshal([]any{salt, name, value})
 	if err != nil {
 		// Static suffix only: never wrap the underlying err — it can embed
-		// the claim value itself (hard rule 3 / GDPR; see body marshal above).
+		// the claim value itself (no attribute values in errors — GDPR; see body marshal above).
 		return "", "", fmt.Errorf("%w: claim value not JSON-serializable", ErrTemplate)
 	}
 	enc = base64.RawURLEncoding.EncodeToString(raw)
@@ -221,14 +221,14 @@ func (b *sdBuilder) discloseArray(value any) (enc, dig string, err error) {
 	raw, err := json.Marshal([]any{salt, value})
 	if err != nil {
 		// Static suffix only: never wrap the underlying err — it can embed
-		// the claim value itself (hard rule 3 / GDPR; see body marshal above).
+		// the claim value itself (no attribute values in errors — GDPR; see body marshal above).
 		return "", "", fmt.Errorf("%w: claim value not JSON-serializable", ErrTemplate)
 	}
 	enc = base64.RawURLEncoding.EncodeToString(raw)
 	return enc, digest([]byte(enc), b.h), nil
 }
 
-// saltBytes is the salt length in bytes (128 bit, SD-JWT §4.2.1 minimum
+// saltBytes is the salt length in bytes (128 bit, [SD-JWT §4.2.1] minimum
 // recommendation).
 const saltBytes = 16
 

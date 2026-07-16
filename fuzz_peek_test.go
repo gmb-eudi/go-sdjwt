@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// Hard rule 5: Peek must never panic on malformed/adversarial input. Peek is
+// Peek must never panic on malformed/adversarial input. Peek is
 // pre-trust and unsigned-shape by design, so — unlike FuzzVerify — no signature
 // gates the parse: mutation reaches the header/payload decode directly. Seeds
 // are real Issue outputs (with/without an x5c chain) plus deliberate negative

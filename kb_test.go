@@ -197,11 +197,11 @@ func TestVerifyKBNegatives(t *testing.T) {
 		}
 	})
 
-	// M-6: an empty ExpectedAud/ExpectedNonce is a caller misconfiguration,
+	// An empty ExpectedAud/ExpectedNonce is a caller misconfiguration,
 	// not a legitimate "match anything" wildcard. verifyKB's aud/nonce checks
 	// use != for comparison, so an empty expected value would otherwise match
 	// a KB whose own aud/nonce also happen to be empty — fail closed instead
-	// (hard rule 7) regardless of what the token carries.
+	// regardless of what the token carries.
 	t.Run("empty expected aud rejected even if token aud is also empty (misconfiguration)", func(t *testing.T) {
 		f := newKBFixture(t, "", "n0nce", now)
 		_, err := v.Verify(context.Background(), VerifyInput{Presentation: f.pres, IssuerKey: f.issKey.Public(), ExpectedAud: "", ExpectedNonce: "n0nce", RequireKB: true})

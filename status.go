@@ -6,11 +6,11 @@ import (
 	"math"
 )
 
-// extractStatus reads the status_list reference (IETF Token Status List §5)
+// extractStatus reads the status_list reference ([Token Status List §5])
 // from the issuer payload. Absent → (nil, nil). Present but not the expected
 // {status:{status_list:{idx,uri}}} shape → ErrStatusMalformed (fail closed;
 // never silently ignored). Only the status_list mechanism is supported here;
-// fetching/verifying the referenced list is go-statuslist (WP-04).
+// fetching/verifying the referenced list is go-statuslist.
 func extractStatus(payload map[string]any) (*StatusRef, error) {
 	raw, ok := payload[claimStatus]
 	if !ok {
@@ -30,7 +30,7 @@ func extractStatus(payload map[string]any) (*StatusRef, error) {
 	}
 	uri, ok := sl[claimURI].(string)
 	if !ok || uri == "" {
-		// M-4: this covers both an absent/wrong-type uri AND a present but
+		// this covers both an absent/wrong-type uri AND a present but
 		// empty string ("") — the message says so explicitly rather than
 		// reusing "missing" for the empty case (cosmetic; behavior unchanged).
 		return nil, fmt.Errorf("%w: status_list.uri missing or empty", ErrStatusMalformed)

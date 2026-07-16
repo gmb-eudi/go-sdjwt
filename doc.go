@@ -10,7 +10,7 @@
 // signatures, and JWK conversions come from the ECCG-pinned policy. Time is
 // injected (Verifier clock; PresentKB now parameter). Errors are typed
 // sentinels carrying protocol identifiers and claim names only, never claim
-// values (hard rule 3).
+// values.
 //
 // Import go-eudi-crypto with an alias to avoid clashing with the standard
 // library:

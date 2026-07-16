@@ -6,7 +6,7 @@ import (
 )
 
 // reconstruct verifies the disclosures against the issuer payload and returns
-// the disclosed claim set (SD-JWT §7-8). It:
+// the disclosed claim set ([SD-JWT §7-8]). It:
 //   - indexes disclosures by digest (a duplicate SUPPLIED disclosure raw
 //     string → ErrDuplicateDigest);
 //   - walks the payload, replacing _sd digests (objects) and "..." wrappers
@@ -15,7 +15,7 @@ import (
 //   - rejects any digest string that occurs more than once anywhere in the
 //     payload's _sd/"..." positions, whether or not it has a matching
 //     disclosure (decoys included) — the digest namespace must stay 1:1
-//     payload-wide (ErrDuplicateDigest; see WP-02 README Decisions);
+//     payload-wide (ErrDuplicateDigest; see the README Decisions section);
 //   - counts digests with no matching disclosure as decoys (silently
 //     skipped, SD-JWT privacy feature) — but requires EVERY supplied
 //     disclosure to be matched by exactly one digest in the payload
@@ -26,8 +26,8 @@ import (
 //   - rejects a literal "..." object key wherever it is not consumed as a
 //     complete {"...": "<digest>"} array-element wrapper — including a plain
 //     object member and an array element carrying "..." alongside any other
-//     key (SD-JWT §4.2.2 reserves "..." for the wrapper shape only; fail
-//     closed, hard rule 7 — see the object() doc comment for the two paths
+//     key ([SD-JWT §4.2.2] reserves "..." for the wrapper shape only; fail
+//     closed — see the object() doc comment for the two paths
 //     that land here).
 func reconstruct(payload map[string]any, disclosures [][]byte, h stdcrypto.Hash) (map[string]any, int, error) {
 	w := &walker{
@@ -76,8 +76,8 @@ type walker struct {
 // fails closed on a digest seen more than once anywhere in the payload —
 // including decoys, since a repeated digest string breaks the 1:1
 // digest-to-disclosure mapping the protocol assumes, regardless of whether it
-// happens to resolve to a real disclosure (WP-02 README Decisions). found is
-// false for a decoy (counted, not an error: SD-JWT §4.2.5 privacy feature).
+// happens to resolve to a real disclosure (see the README Decisions section). found is
+// false for a decoy (counted, not an error: [SD-JWT §4.2.5] privacy feature).
 func (w *walker) resolve(dg string) (d disclosure, found bool, err error) {
 	if w.seen[dg] {
 		return disclosure{}, false, fmt.Errorf("%w", ErrDuplicateDigest)
@@ -108,7 +108,7 @@ func (w *walker) value(v any) (any, error) {
 
 // object processes one JSON object: copies clear members (recursing into
 // each), strips _sd/_sd_alg, and resolves the object's own _sd digests into
-// disclosed members (SD-JWT §4.2.1, §7).
+// disclosed members ([SD-JWT §4.2.1, §7]).
 func (w *walker) object(m map[string]any) (map[string]any, error) {
 	out := make(map[string]any, len(m))
 	for k, v := range m {
@@ -116,7 +116,7 @@ func (w *walker) object(m map[string]any) (map[string]any, error) {
 			continue
 		}
 		if k == claimEllipsis {
-			// SD-JWT §4.2.2 reserves "..." exclusively for the array-element
+			// [SD-JWT §4.2.2] reserves "..." exclusively for the array-element
 			// digest wrapper ({"...": "<digest>"}), which is consumed entirely
 			// inside array() and never reaches this loop. A literal "..." key
 			// surviving to here means either (a) it appears directly as a
@@ -125,8 +125,7 @@ func (w *walker) object(m map[string]any) (map[string]any, error) {
 			// len(m)==1 check rejected it as a wrapper and array() fell
 			// through to recursing into it as ordinary data. Both are
 			// ambiguous/adversarial constructs no conformant issuer emits;
-			// fail closed rather than surface a claim literally named "..."
-			// (hard rule 7).
+			// fail closed rather than surface a claim literally named "...".
 			return nil, fmt.Errorf("%w: reserved key %q not allowed as an object member", ErrMalformed, claimEllipsis)
 		}
 		rv, err := w.value(v)
@@ -153,7 +152,7 @@ func (w *walker) object(m map[string]any) (map[string]any, error) {
 			return nil, err
 		}
 		if !found {
-			continue // decoy: accepted silently (SD-JWT §4.2.5), counted
+			continue // decoy: accepted silently ([SD-JWT §4.2.5]), counted
 		}
 		if len(d.arr) != 3 {
 			return nil, fmt.Errorf("%w: object disclosure must have 3 elements", ErrDisclosure)
@@ -178,7 +177,7 @@ func (w *walker) object(m map[string]any) (map[string]any, error) {
 }
 
 // array processes one JSON array: an element shaped {"...": <digest>} is an
-// array-element disclosure wrapper (SD-JWT §4.2.2) — resolved or, for a
+// array-element disclosure wrapper ([SD-JWT §4.2.2]) — resolved or, for a
 // decoy, omitted; every other element is recursed into unchanged.
 func (w *walker) array(a []any) ([]any, error) {
 	out := make([]any, 0, len(a))
@@ -211,7 +210,7 @@ func (w *walker) array(a []any) ([]any, error) {
 }
 
 // arrayDigest reports whether e is an array-element disclosure wrapper
-// {"...": "<digest>"} (SD-JWT §4.2.2) and, if so, returns its digest.
+// {"...": "<digest>"} ([SD-JWT §4.2.2]) and, if so, returns its digest.
 func arrayDigest(e any) (string, bool) {
 	m, ok := e.(map[string]any)
 	if !ok || len(m) != 1 {

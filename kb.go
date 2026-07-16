@@ -7,11 +7,11 @@ import (
 	eudicrypto "github.com/gmb-eudi/go-eudi-crypto"
 )
 
-// verifyKB verifies the Key-Binding JWT (SD-JWT §4.3): typ=kb+jwt, signature
+// verifyKB verifies the Key-Binding JWT ([SD-JWT §4.3]): typ=kb+jwt, signature
 // by the cnf key, aud/nonce match, iat within the freshness window, and
 // sd_hash over exactly the presented issuer-JWT+disclosures (parsed.sdPart)
 // under the credential hash h. Each failure has a distinct error so services
-// can map it precisely (docs/conventions.md err:domain:reason).
+// can map it precisely (err:domain:reason).
 func (v *Verifier) verifyKB(p *parsed, holderKey stdcrypto.PublicKey, in VerifyInput, h stdcrypto.Hash) error {
 	payloadBytes, hdr, err := eudicrypto.VerifyJWS(p.kb, holderKey)
 	if err != nil {
@@ -28,7 +28,7 @@ func (v *Verifier) verifyKB(p *parsed, holderKey stdcrypto.PublicKey, in VerifyI
 	// wildcard: the comparisons below use != , so an empty expected value
 	// would otherwise silently match a KB whose own aud/nonce also happen to
 	// be empty (e.g. a malformed or adversarial token). Fail closed whenever
-	// a KB is actually being verified (hard rule 7), before comparing to the
+	// a KB is actually being verified (fail closed), before comparing to the
 	// token's value at all.
 	if in.ExpectedAud == "" {
 		return fmt.Errorf("%w: expected aud must not be empty", ErrKBAudience)
@@ -36,7 +36,7 @@ func (v *Verifier) verifyKB(p *parsed, holderKey stdcrypto.PublicKey, in VerifyI
 	if in.ExpectedNonce == "" {
 		return fmt.Errorf("%w: expected nonce must not be empty", ErrKBNonce)
 	}
-	// aud is intentionally read as a single string only (SD-JWT §4.3); an
+	// aud is intentionally read as a single string only ([SD-JWT §4.3]); an
 	// array aud fails the type assertion, yielding "" which never matches
 	// in.ExpectedAud, so it fails closed with ErrKBAudience.
 	if a, _ := body[claimAUD].(string); a != in.ExpectedAud {

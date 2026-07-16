@@ -14,7 +14,7 @@ import (
 // WITHOUT verifying anything — no signature check, no digest check, no expiry
 // check. It is what Peek returns. It exists so a caller can resolve the
 // issuer's public key (e.g. from the x5c chain, against a trust anchor) BEFORE
-// calling Verify, which requires the resolved key as input (ADR-0004: this
+// calling Verify, which requires the resolved key as input (this
 // library never does key resolution itself). NEVER use a PeekResult's fields to
 // make a trust or authorization decision directly — the header/payload fields
 // below are UNVERIFIED; verify with Verify first.
@@ -22,10 +22,10 @@ import (
 // (Named PeekResult rather than Peek because Go forbids a type and the Peek
 // function sharing one identifier in this package.)
 type PeekResult struct {
-	Typ             string              // protected header "typ" (RFC 7515 §4.1), unverified
-	X5C             []*x509.Certificate // protected header x5c (RFC 7515 §4.1.6), leaf first; nil if absent; NOT validated against any anchor
-	Iss             string              // payload "iss" (SD-JWT VC §3.2), read WITHOUT signature verification
-	VCT             string              // payload "vct" (SD-JWT VC §3.2), read WITHOUT signature verification
+	Typ             string              // protected header "typ" ([RFC 7515 §4.1]), unverified
+	X5C             []*x509.Certificate // protected header x5c ([RFC 7515 §4.1.6]), leaf first; nil if absent; NOT validated against any anchor
+	Iss             string              // payload "iss" ([SD-JWT VC §3.2]), read WITHOUT signature verification
+	VCT             string              // payload "vct" ([SD-JWT VC §3.2]), read WITHOUT signature verification
 	DisclosureCount int                 // number of ~-separated disclosure segments
 }
 
@@ -36,7 +36,7 @@ type PeekResult struct {
 // trusted directly. Reuses the combined-format splitter and the go-eudi-crypto
 // header peek; reads only iss/vct from the payload (never the full claim set,
 // keeping the "unverified" boundary obvious and avoiding exposing claim values
-// pre-verification — hard rule 3 in spirit). Fail closed (ErrMalformed) on any
+// pre-verification). Fail closed (ErrMalformed) on any
 // decode failure; must not panic on adversarial input (fuzzed: FuzzPeek).
 func Peek(presentation []byte) (*PeekResult, error) {
 	p, err := splitCombined(presentation)
@@ -87,7 +87,7 @@ func peekIssVCT(issuerJWS []byte) (iss, vct string, err error) {
 		return "", "", fmt.Errorf("%w: issuer payload segment", ErrMalformed)
 	}
 	// Only iss/vct are extracted; other claim values are intentionally never
-	// decoded or exposed pre-verification (hard rule 3 in spirit).
+	// decoded or exposed pre-verification (never expose claim values before verification).
 	var body struct {
 		Iss string `json:"iss"`
 		VCT string `json:"vct"`
@@ -95,7 +95,7 @@ func peekIssVCT(issuerJWS []byte) (iss, vct string, err error) {
 	if err := json.Unmarshal(raw, &body); err != nil {
 		// Static suffix only: a *json.SyntaxError can echo bytes of the decoded
 		// payload (which carries claim values) — never wrap the underlying err
-		// (hard rule 3 / GDPR; same discipline as decodeJSONObject in verify.go).
+		// (no attribute values in errors — GDPR; same discipline as decodeJSONObject in verify.go).
 		return "", "", fmt.Errorf("%w: issuer payload is not valid JSON", ErrMalformed)
 	}
 	return body.Iss, body.VCT, nil

@@ -117,7 +117,7 @@ func TestVerifyLegacyTypAccepted(t *testing.T) {
 	}
 }
 
-// M-2: decodeJSONObject must reject trailing bytes after the JSON object,
+// decodeJSONObject must reject trailing bytes after the JSON object,
 // mirroring decodeDisclosure's dec.More() guard in disclosure.go. The
 // payload is signature-bound so this is not attacker-reachable in practice,
 // but the two decoders should apply the same defense-in-depth consistently.

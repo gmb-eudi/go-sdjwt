@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// Hardening caps for untrusted input (hard rule 5). A conformant EUDI
+// Hardening caps for untrusted input (must never panic on malformed input). A conformant EUDI
 // credential is far smaller; these bound worst-case work before any decode.
 const (
 	maxPresentationBytes = 256 * 1024 // whole combined format
@@ -20,7 +20,7 @@ type parsed struct {
 	sdPart      []byte   // exact bytes hashed for sd_hash: issuer + disclosures + trailing '~'
 }
 
-// splitCombined splits a presentation into its parts (SD-JWT §4.1). Layout:
+// splitCombined splits a presentation into its parts ([SD-JWT §4.1]). Layout:
 // <issuer-jwt>~<disclosure>~...~<disclosure>~<kb-jwt>, where the KB-JWT slot
 // is the final ~-separated segment and is empty when no KB-JWT is present.
 // Fail closed: empty segments, oversized input, too many disclosures, a
@@ -65,7 +65,7 @@ func splitCombined(pres []byte) (*parsed, error) {
 		kb = last
 	}
 	// sd_hash covers everything up to and including the '~' before the KB-JWT
-	// (SD-JWT §4.3): the whole presentation minus the KB-JWT bytes.
+	// ([SD-JWT §4.3]): the whole presentation minus the KB-JWT bytes.
 	sdPart := pres[:len(pres)-len(kb)]
 	return &parsed{issuer: issuer, disclosures: disclosures, kb: kb, sdPart: sdPart}, nil
 }

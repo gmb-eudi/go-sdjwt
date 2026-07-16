@@ -41,11 +41,11 @@ func pidTemplate(now time.Time, holder *ecdsa.PrivateKey) sdjwt.CredentialTempla
 			"nationalities": []any{"British", "Betelgeusian"},
 		},
 		// address and nationalities are selective at BOTH the container level
-		// and the leaf level (recursive disclosure, SD-JWT §5.9): hiding only
+		// and the leaf level (recursive disclosure, [SD-JWT §5.9]): hiding only
 		// the leaves would still let a verifier see the container shape
 		// (an empty {}/[] claim) even when nothing under it is disclosed.
 		// Marking the container itself selective means its own presence
-		// requires its own disclosure — see WP-02 README Decisions (T-02.7).
+		// requires its own disclosure — see the README Decisions section.
 		Selective: []sdjwt.ClaimPath{
 			sdjwt.Path("given_name"),
 			sdjwt.Path("family_name"),
@@ -115,7 +115,7 @@ func TestRoundtripSelectiveDisclosure(t *testing.T) {
 	}
 }
 
-// A different subset also verifies (selective disclosure subsets — T-02.7).
+// A different subset also verifies (selective disclosure subsets).
 func TestRoundtripEmptyDisclosure(t *testing.T) {
 	now := time.Date(2026, 7, 4, 12, 0, 0, 0, time.UTC)
 	issKey := genKey(t)
@@ -180,7 +180,7 @@ func TestPresentKBRejects(t *testing.T) {
 	}
 }
 
-// M-3: pins PresentKB's behavior for a requested path that names an existing
+// Pins PresentKB's behavior for a requested path that names an existing
 // claim which was never made selective (an always-clear claim). This is not
 // an error today — see the "Pinned behavior" note on selectDisclosures in
 // present.go — it succeeds and simply adds nothing to the disclosure set for
@@ -215,8 +215,8 @@ func TestPresentKBNonSelectiveExistingPathIsNoop(t *testing.T) {
 
 	// The claim is present regardless — it was never blinded in the first
 	// place. PresentKB always attaches a KB-JWT, so it is verified here too
-	// (SD-JWT §4.3) — ExpectedAud/ExpectedNonce must match what PresentKB
-	// signed above (M-6 now fails closed on an empty expected value whenever
+	// ([SD-JWT §4.3]) — ExpectedAud/ExpectedNonce must match what PresentKB
+	// signed above (now fails closed on an empty expected value whenever
 	// a KB is actually verified).
 	v := sdjwt.NewVerifier(sdjwt.WithClock(func() time.Time { return now }))
 	vc, err := v.Verify(context.Background(), sdjwt.VerifyInput{
@@ -252,7 +252,7 @@ func TestIssueRejectsBadTemplate(t *testing.T) {
 	}
 }
 
-// hard rule 3 / GDPR regression: a claim value that fails JSON marshaling
+// GDPR regression (no attribute values in errors): a claim value that fails JSON marshaling
 // (math.NaN() — json.Marshal reports it via *json.UnsupportedValueError,
 // whose message embeds the offending value verbatim: "json: unsupported
 // value: NaN") must not leak that value into the returned error. This

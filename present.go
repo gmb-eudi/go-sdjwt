@@ -18,9 +18,9 @@ var errPresentNoDecrypter = errors.New("sdjwt: holder signer provider is sign-on
 // PresentKB builds a holder presentation of an issued SD-JWT: it selects the
 // disclosures required for the disclose paths, appends a Key-Binding JWT
 // (kb+jwt) signed by holder over the exact presented issuer-JWT+disclosures
-// (SD-JWT §4.3). The issuer signature is NOT re-verified here (the holder
-// presents its own, already-trusted credential — see WP-02 README
-// Decisions). now is injected (no wall clock). Reused by the future issuer
+// ([SD-JWT §4.3]). The issuer signature is NOT re-verified here (the holder
+// presents its own, already-trusted credential — see the README
+// Decisions section). now is injected (no wall clock). Reused by the future issuer
 // and internal/testwallet.
 func PresentKB(ctx context.Context, holder stdcrypto.Signer, sdJWT []byte, disclose []ClaimPath, aud, nonce string, now time.Time) ([]byte, error) {
 	for _, p := range disclose {
@@ -92,9 +92,9 @@ func issuerPayloadUnverified(issuer []byte) (map[string]any, error) {
 // is a prefix of dp (w itself and its whole subtree — selecting a container
 // discloses everything under it). Every requested path must name an existing
 // node in the fully-disclosed structure, or ErrClaimPath (path only, never a
-// value — hard rule 3).
+// value).
 //
-// Pinned behavior (M-3): a requested path that names an existing node which
+// Pinned behavior: a requested path that names an existing node which
 // was never made selective (an always-clear claim — no _sd digest/"..."
 // wrapper references it, so it has no entry in s.discPath) passes the
 // existence check but matches nothing in the keep-set loop below — it is a

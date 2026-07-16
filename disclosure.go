@@ -12,9 +12,9 @@ import (
 
 // disclosure is a decoded SD-JWT Disclosure: [salt, name, value] for an
 // object property (len 3) or [salt, value] for an array element (len 2)
-// (SD-JWT §4.2).
+// ([SD-JWT §4.2]).
 type disclosure struct {
-	raw []byte // the base64url string, hashed as-is (SD-JWT §4.2.1)
+	raw []byte // the base64url string, hashed as-is ([SD-JWT §4.2.1])
 	arr []any  // decoded array
 }
 
@@ -32,7 +32,7 @@ func decodeDisclosure(raw []byte) (disclosure, error) {
 	if err := d.Decode(&arr); err != nil {
 		// Static suffix only: a *json.SyntaxError's message can echo a byte of
 		// the decoded disclosure content ([salt, name, value]) — never wrap
-		// the underlying err (hard rule 3 / GDPR; errors.go).
+		// the underlying err (no attribute values in errors — GDPR).
 		return disclosure{}, fmt.Errorf("%w: disclosure is not valid JSON", ErrDisclosure)
 	}
 	if d.More() {
@@ -48,16 +48,16 @@ func decodeDisclosure(raw []byte) (disclosure, error) {
 }
 
 // digest computes the SD-JWT digest of a disclosure: base64url(h(ASCII(raw)))
-// where raw is the base64url disclosure string itself (SD-JWT §4.2.1).
+// where raw is the base64url disclosure string itself ([SD-JWT §4.2.1]).
 func digest(raw []byte, h stdcrypto.Hash) string {
 	hh := h.New()
 	hh.Write(raw)
 	return base64.RawURLEncoding.EncodeToString(hh.Sum(nil))
 }
 
-// hashForSDAlg resolves the payload _sd_alg (SD-JWT §4.1.1) to a crypto.Hash
+// hashForSDAlg resolves the payload _sd_alg ([SD-JWT §4.1.1]) to a crypto.Hash
 // via the ECCG policy. Absent → policy default (sha-256). Unknown or
-// non-string → ErrHashAlg (fail closed; hard rule 4 — no literal here).
+// non-string → ErrHashAlg (fail closed; no hard-coded algorithm literal here).
 func hashForSDAlg(pol eudicrypto.Policy, payload map[string]any) (stdcrypto.Hash, error) {
 	name := ""
 	if v, ok := payload[claimSDAlg]; ok {

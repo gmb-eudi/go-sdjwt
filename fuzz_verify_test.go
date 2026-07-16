@@ -14,12 +14,12 @@ import (
 	eudicrypto "github.com/gmb-eudi/go-eudi-crypto"
 )
 
-// Hard rule 5: Verify must never panic on malformed/adversarial input. The
+// Verify must never panic on malformed/adversarial input. The
 // seed corpus below is STRUCTURED, not random bytes: every seed is either a
-// genuinely valid presentation (built via the Issue/PresentKB façade, T-02.7)
-// or a deliberate negative shape mirroring a named test from T-02.2
-// (combined-format parsing), T-02.3 (disclosure/digest reconstruction),
-// T-02.4 (issuer envelope), or T-02.5 (KB-JWT). Every signed seed uses the
+// genuinely valid presentation (built via the Issue/PresentKB façade)
+// or a deliberate negative shape mirroring a named test —
+// combined-format parsing, disclosure/digest reconstruction,
+// issuer envelope, or KB-JWT. Every signed seed uses the
 // SAME issKey/holder/rogue keys the fuzz Verifier below trusts, so mutation
 // explores realistic neighborhoods of both the accept and reject paths
 // instead of forever failing at the outermost signature check.
@@ -41,7 +41,7 @@ func FuzzVerify(f *testing.F) {
 	holderJWK := jwkOf(f, holder.Public())
 	h := stdcrypto.SHA256
 
-	// --- T-02.7: a genuinely valid presentation (accept-path seed), issued
+	// --- a genuinely valid presentation (accept-path seed), issued
 	// and presented through the public façade with the keys this fuzz run's
 	// Verifier trusts.
 	sdJWT, err := NewIssuer(kp, "iss").Issue(context.Background(), CredentialTemplate{
@@ -65,7 +65,7 @@ func FuzzVerify(f *testing.F) {
 		f.Fatal(err)
 	}
 
-	// --- T-02.4 issuer-envelope negatives: basePayload (verify_test.go) is
+	// --- issuer-envelope negatives: basePayload (verify_test.go) is
 	// the same minimal "iss/vct/_sd_alg + one disclosable given_name" fixture
 	// TestVerifyEnvelopeNegatives itself mutates; buildEnvelope re-signs it
 	// with a mutated payload and/or typ header.
@@ -77,7 +77,7 @@ func FuzzVerify(f *testing.F) {
 		return assemble(signIssuerJWT(f, kp, "iss", typ, p), disc)
 	}
 
-	// --- T-02.3 disclosure/digest negatives: same shapes as
+	// --- disclosure/digest negatives: same shapes as
 	// TestReconstructNegatives, wrapped in a real issuer JWT signed with
 	// issKey so the fuzz Verify pipeline actually reaches reconstruction.
 	buildDisclosure := func(payload map[string]any, discs ...string) []byte {
@@ -90,7 +90,7 @@ func FuzzVerify(f *testing.F) {
 	dReserved, digReserved := mkDisclosure(f, "s0", claimSD, "x")
 	dBadCount, digBadCount := mkArrayDisclosure(f, "s0", "value")
 
-	// --- T-02.5 KB-JWT negatives: one signed issuer JWT WITH cnf (so the KB
+	// --- KB-JWT negatives: one signed issuer JWT WITH cnf (so the KB
 	// branch is reached) and one WITHOUT (for the "KB present, no cnf" case),
 	// both keyed off the same issKey/holder/rogue as the fuzz Verifier.
 	payloadCNF, discCNF := basePayload(f, holderJWK)
@@ -114,11 +114,11 @@ func FuzzVerify(f *testing.F) {
 	}()
 
 	seeds := [][]byte{
-		// --- T-02.7 / accept path ---
+		// --- accept path ---
 		validPres,
 		sdJWT, // issued, no KB (accepts when RequireKB=false; ErrKBRequired when true)
 
-		// --- T-02.2: malformed combined format ---
+		// --- malformed combined format ---
 		nil,
 		[]byte(""),
 		[]byte("~"),
@@ -132,7 +132,7 @@ func FuzzVerify(f *testing.F) {
 		[]byte(jwtShell + "~" + strings.Repeat("A", maxPresentationBytes) + "~"), // oversized
 		[]byte(jwtShell + "~" + strings.Repeat(d1+"~", maxDisclosures+1)),        // too many disclosures
 
-		// --- T-02.4: issuer envelope negatives ---
+		// --- issuer envelope negatives ---
 		buildEnvelope(nil, "JWT"),      // wrong typ
 		buildEnvelope(nil, typVCSDJWT), // legacy typ rejected by default (no WithLegacyVCTyp)
 		buildEnvelope(func(p map[string]any) { delete(p, claimISS) }, typSDJWT),                                              // missing iss
@@ -143,7 +143,7 @@ func FuzzVerify(f *testing.F) {
 		buildEnvelope(func(p map[string]any) { p[claimCNF] = map[string]any{} }, typSDJWT),                                   // malformed cnf: jwk absent
 		buildEnvelope(func(p map[string]any) { p[claimCNF] = map[string]any{claimJWK: "not-an-object"} }, typSDJWT),          // malformed cnf: jwk garbage
 
-		// --- T-02.3: disclosure/digest negatives ---
+		// --- disclosure/digest negatives ---
 		buildDisclosure(map[string]any{claimSD: []any{digGiven}}, dOther),                                                     // swapped/forged: referenced digest never matched
 		buildDisclosure(map[string]any{claimSD: []any{digGiven}, "nested": map[string]any{claimSD: []any{digGiven}}}, dGiven), // digest reuse across two _sd arrays
 		buildDisclosure(map[string]any{claimSD: []any{digReserved}}, dReserved),                                               // disclosure name is reserved ("_sd")
@@ -151,7 +151,7 @@ func FuzzVerify(f *testing.F) {
 		buildDisclosure(map[string]any{claimSD: []any{digBadCount}}, dBadCount),                                               // object disclosure with wrong (2) element count
 		buildDisclosure(map[string]any{claimSD: []any{digGiven}}, "!!!not-base64!!!"),                                         // undecodable base64url disclosure
 
-		// --- T-02.5: KB-JWT negatives (all reach verifyKB) ---
+		// --- KB-JWT negatives (all reach verifyKB) ---
 		sdPartCNF, // KB required but absent
 		append(append([]byte{}, sdPartNoCNF...), signKB(f, holder, sdPartNoCNF, "aud", "nonce", fixedNow, h)...),               // KB present, issuer has no cnf
 		append(append([]byte{}, sdPartCNF...), signKB(f, holder, sdPartCNF, "wrong-aud", "nonce", fixedNow, h)...),             // aud mismatch

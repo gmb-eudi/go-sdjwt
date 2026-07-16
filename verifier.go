@@ -38,7 +38,7 @@ func WithSkew(d time.Duration) Option { return func(v *Verifier) { v.skew = d } 
 func WithKBMaxAge(d time.Duration) Option { return func(v *Verifier) { v.kbMaxAge = d } }
 
 // WithLegacyVCTyp additionally accepts the legacy vc+sd-jwt typ header
-// (T-02.4 compatibility flag). Off by default: dc+sd-jwt only.
+// (compatibility flag). Off by default: dc+sd-jwt only.
 func WithLegacyVCTyp() Option { return func(v *Verifier) { v.allowLegacyVCTyp = true } }
 
 // WithPolicy overrides the ECCG policy singleton (tests / alternative

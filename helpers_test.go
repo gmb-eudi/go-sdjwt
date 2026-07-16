@@ -27,7 +27,7 @@ func newECKey(t testing.TB) *ecdsa.PrivateKey {
 	return k
 }
 
-// b64 is base64url without padding (SD-JWT §4.2).
+// b64 is base64url without padding ([SD-JWT §4.2]).
 func b64(b []byte) string { return base64.RawURLEncoding.EncodeToString(b) }
 
 // mkDisclosure builds an object-property disclosure [salt, name, value] and

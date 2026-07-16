@@ -2,7 +2,7 @@ package sdjwt
 
 import "testing"
 
-// Hard rule 5: splitCombined must never panic on malformed input.
+// splitCombined must never panic on malformed input.
 func FuzzParse(f *testing.F) {
 	seeds := []string{
 		"",

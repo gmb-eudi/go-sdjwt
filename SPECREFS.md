@@ -8,7 +8,7 @@
 
 | Spec | Version pinned | Sections used |
 |---|---|---|
-| SD-JWT | **RFC 9901** (graduated from draft-ietf-oauth-selective-disclosure-jwt -22; see below) | §4.1.1 (_sd_alg), §4.2 (Disclosures), §4.2.2/§4.2.4.2 (array elements `...`), §4.3 (KB-JWT, sd_hash), §7 (verification / digest reconstruction) |
+| SD-JWT | **RFC 9901** (graduated from draft-ietf-oauth-selective-disclosure-jwt -22; see below) | §4.1.1 (_sd_alg), §4.2 (Disclosures), §4.2.2/§4.2.4.2 (array elements `...`), §4.2.6 (recursive disclosures), §4.3 (KB-JWT, sd_hash), §7.1 (verification / digest reconstruction) |
 | SD-JWT VC (draft-ietf-oauth-sd-jwt-vc) | -09 pinned here; EU reference (`eudi-lib-jvm-sdjwt-kt-main`) cites -13 — still a draft, not yet an RFC | §3 (vct, iss, cnf, status), typ `dc+sd-jwt` (legacy `vc+sd-jwt`) |
 | x5c issuer chain embed (`WithChain`) + structural header peek (`Peek`) | RFC 7515 | §4.1 (JWS protected header), §4.1.6 (x5c) — structural/pre-trust only, no verification |
 | OpenID4VC HAIP | 1.0 (final) | SD-JWT VC profile; KB required |

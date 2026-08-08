@@ -6,7 +6,7 @@ import (
 )
 
 // reconstruct verifies the disclosures against the issuer payload and returns
-// the disclosed claim set ([SD-JWT §7-8]). It:
+// the disclosed claim set ([SD-JWT §7.1]). It:
 //   - indexes disclosures by digest (a duplicate SUPPLIED disclosure raw
 //     string → ErrDuplicateDigest);
 //   - walks the payload, replacing _sd digests (objects) and "..." wrappers

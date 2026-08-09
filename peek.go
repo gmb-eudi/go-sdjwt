@@ -24,8 +24,8 @@ import (
 type PeekResult struct {
 	Typ             string              // protected header "typ" ([RFC 7515 §4.1]), unverified
 	X5C             []*x509.Certificate // protected header x5c ([RFC 7515 §4.1.6]), leaf first; nil if absent; NOT validated against any anchor
-	Iss             string              // payload "iss" ([SD-JWT VC §3.2]), read WITHOUT signature verification
-	VCT             string              // payload "vct" ([SD-JWT VC §3.2]), read WITHOUT signature verification
+	Iss             string              // payload "iss" ([SD-JWT VC draft-18 §2.2.2]), read WITHOUT signature verification
+	VCT             string              // payload "vct" ([SD-JWT VC draft-18 §2.2.2]), read WITHOUT signature verification
 	DisclosureCount int                 // number of ~-separated disclosure segments
 }
 

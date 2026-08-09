@@ -10,7 +10,7 @@ import (
 // are never hard-coded; those come from go-eudi-crypto). Kept as constants so the code
 // reads against the spec.
 const (
-	typSDJWT   = "dc+sd-jwt" // [SD-JWT VC §3.2.1] typ
+	typSDJWT   = "dc+sd-jwt" // [SD-JWT VC draft-18 §2.2.1] typ
 	typVCSDJWT = "vc+sd-jwt" // legacy typ, accepted only behind WithLegacyVCTyp
 	typKB      = "kb+jwt"    // [SD-JWT §4.3] KB-JWT typ
 
@@ -19,7 +19,7 @@ const (
 	claimSD         = "_sd"         // [SD-JWT §4.2.4] digest array
 	claimSDAlg      = "_sd_alg"     // [SD-JWT §4.1.1] hash-name
 	claimEllipsis   = "..."         // [SD-JWT §4.2.2] array-element digest wrapper
-	claimVCT        = "vct"         // [SD-JWT VC §3.2.2]
+	claimVCT        = "vct"         // [SD-JWT VC draft-18 §2.2.2]
 	claimISS        = "iss"         // RFC 7519
 	claimEXP        = "exp"         // RFC 7519
 	claimNBF        = "nbf"         // RFC 7519

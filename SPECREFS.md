@@ -1,20 +1,48 @@
 # Pinned specification versions
 
-> NORMATIVE-SOURCE GAP: neither SD-JWT (now RFC 9901) nor the SD-JWT VC draft
-> are mirrored in the verifier repo `references/`. Add the RFC 9901 text there
-> and re-verify every `// SD-JWT §…` code citation and the reconstruction
-> algorithm precisely — see the 2026-07-06 EU cross-check note below for what's
-> already been spot-checked vs. what still needs the primary text.
+> NORMATIVE-SOURCE GAP, part-closed 2026-08-09: the SD-JWT VC citations in this
+> package have now been checked against the primary draft text and re-pointed at
+> **draft-18** — see the note below. The `// SD-JWT §…` citations into RFC 9901
+> and the reconstruction algorithm have **not** been re-verified against the RFC
+> and are still carried from the -22 draft; that pass is still owed.
 
 | Spec | Version pinned | Sections used |
 |---|---|---|
 | SD-JWT | **RFC 9901** (graduated from draft-ietf-oauth-selective-disclosure-jwt -22; see below) | §4.1.1 (_sd_alg), §4.2 (Disclosures), §4.2.2/§4.2.4.2 (array elements `...`), §4.2.6 (recursive disclosures), §4.3 (KB-JWT, sd_hash), §7.1 (verification / digest reconstruction) |
-| SD-JWT VC (draft-ietf-oauth-sd-jwt-vc) | -09 pinned here; EU reference (`eudi-lib-jvm-sdjwt-kt-main`) cites -13 — still a draft, not yet an RFC | §3 (vct, iss, cnf, status), typ `dc+sd-jwt` (legacy `vc+sd-jwt`) |
+| SD-JWT VC (draft-ietf-oauth-sd-jwt-vc) | **-18** (was -09; still a draft, not yet an RFC — every citation names the revision it was checked against) | §2 (credential format), §2.2.1 (typ `dc+sd-jwt`, legacy `vc+sd-jwt`), §2.2.2 (vct, iss, cnf, status) |
 | x5c issuer chain embed (`WithChain`) + structural header peek (`Peek`) | RFC 7515 | §4.1 (JWS protected header), §4.1.6 (x5c) — structural/pre-trust only, no verification |
 | OpenID4VC HAIP | 1.0 (final) | SD-JWT VC profile; KB required |
 | OpenID4VP | 1.0 (final) | §7 claims path pointer (ClaimPath shape only) |
 | IETF Token Status List (draft-ietf-oauth-status-list) | referenced for the `status.status_list` object shape (`uri`, `idx`) only; verification lives in go-statuslist (WP-04) |
 | ARF | 2.9 | §6.6.3.6 / §6.6.3.8 (SD-JWT VC in the EUDI profile) |
+
+## 2026-08-09 SD-JWT VC re-pin: -09 → -18
+
+Every `SD-JWT VC §…` citation in this package was read against the published
+draft-18 text. All nine were written against -09, where §3 was the credential
+format; in -18 the credential format is §2 and §3 is JWT VC Issuer Metadata —
+so all nine still *looked* valid and every one pointed at the wrong section.
+They now name the revision they were checked against (`[SD-JWT VC draft-18
+§2.2.2]`), because an unversioned citation into a draft silently re-points at
+whatever revision is current.
+
+The mapping applied: §3 → §2 (credential format), §3.2 and §3.2.2 → §2.2.2
+(the JWT claims set: `vct`, `iss`, `cnf`, `status`), §3.2.1 → §2.2.1 (the JOSE
+header and the `typ` value), §3.5 → §2.2.2 for the `cnf` read specifically.
+Note that -18's Table of Contents stops at three levels, so §2.2.2 is the
+deepest citable section even though the text below it is subdivided further.
+
+**No behaviour changed, and one divergence was found and left in place:** -18
+§2.2.2 makes `iss` OPTIONAL when the issuer is conveyed by other means, naming
+the x5c end-entity certificate subject as the example — and that x5c path is
+exactly what the high-assurance profile mandates. `Verify` still rejects a
+credential without `iss` (`ErrMissingIssuer`). That is stricter than the format
+requires and is recorded at the error's declaration; changing it is a product
+decision, not a citation fix.
+
+The `typ` values were re-confirmed against -18 §2.2.1: `dc+sd-jwt` is the
+required value and `vc+sd-jwt` is the legacy one, which is what this package
+already implements.
 
 ## 2026-07-06 EU cross-check (`docs/sdjwt-eu-gap-report.md`)
 

@@ -20,13 +20,19 @@ var (
 	ErrClaimCollision  = errors.New("sdjwt: disclosed claim collides with a claim") // err:credential:integrity
 
 	// Issuer JWT + envelope.
-	ErrIssuerSignature = errors.New("sdjwt: issuer signature verification failed")   // err:credential:integrity
-	ErrType            = errors.New("sdjwt: unexpected typ header")                  // err:credential:parse
-	ErrMissingIssuer   = errors.New("sdjwt: iss claim missing")                      // err:credential:parse
-	ErrMissingVCT      = errors.New("sdjwt: vct claim missing")                      // err:credential:parse
-	ErrExpired         = errors.New("sdjwt: credential outside validity window")     // err:credential:expired
-	ErrNotYetValid     = errors.New("sdjwt: credential not yet valid")               // err:credential:expired
-	ErrMissingCNF      = errors.New("sdjwt: holder binding required but cnf absent") // err:credential:binding-failed
+	ErrIssuerSignature = errors.New("sdjwt: issuer signature verification failed") // err:credential:integrity
+	ErrType            = errors.New("sdjwt: unexpected typ header")                // err:credential:parse
+	// Stricter than the credential format requires: [SD-JWT VC draft-18 §2.2.2] makes iss
+	// OPTIONAL when the issuer is conveyed by other means — naming the subject of the
+	// end-entity certificate in the x5c header as the example — and the interoperability
+	// profile this library is built for mandates exactly that x5c-based key resolution
+	// ([HAIP §6.1.1]). So a credential that identifies its issuer only through x5c is
+	// well-formed and this library rejects it. Deliberate for now, and a known divergence.
+	ErrMissingIssuer = errors.New("sdjwt: iss claim missing")                      // err:credential:parse
+	ErrMissingVCT    = errors.New("sdjwt: vct claim missing")                      // err:credential:parse
+	ErrExpired       = errors.New("sdjwt: credential outside validity window")     // err:credential:expired
+	ErrNotYetValid   = errors.New("sdjwt: credential not yet valid")               // err:credential:expired
+	ErrMissingCNF    = errors.New("sdjwt: holder binding required but cnf absent") // err:credential:binding-failed
 
 	// KB-JWT.
 	ErrKBRequired  = errors.New("sdjwt: key binding JWT required but absent")                     // err:credential:binding-failed

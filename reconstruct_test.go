@@ -265,7 +265,7 @@ func TestReconstructNegatives(t *testing.T) {
 		}
 	})
 
-	// [SD-JWT §4.2.2] reserves "..." exclusively for the array-element digest
+	// [SD-JWT §4.2.4.2] reserves "..." exclusively for the array-element digest
 	// wrapper ({"...": "<digest>"}). A literal "..." key in a plain JSON
 	// object is not that wrapper — it must be rejected rather than silently
 	// surfaced as a claim named "..." (fail closed). No
@@ -279,7 +279,7 @@ func TestReconstructNegatives(t *testing.T) {
 	})
 
 	// An array-element "..." wrapper must be exactly {"...": "<digest>"}
-	// ([SD-JWT §4.2.2]). An element carrying "..." alongside any other key is
+	// ([SD-JWT §4.2.4.2]). An element carrying "..." alongside any other key is
 	// ambiguous — neither a clean digest wrapper nor ordinary data — and must
 	// be rejected rather than passed through as a regular array element.
 	t.Run("array element with \"...\" plus extra key rejected", func(t *testing.T) {

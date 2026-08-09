@@ -26,7 +26,7 @@ import (
 //   - rejects a literal "..." object key wherever it is not consumed as a
 //     complete {"...": "<digest>"} array-element wrapper — including a plain
 //     object member and an array element carrying "..." alongside any other
-//     key ([SD-JWT §4.2.2] reserves "..." for the wrapper shape only; fail
+//     key ([SD-JWT §4.2.4.2] reserves "..." for the wrapper shape only; fail
 //     closed — see the object() doc comment for the two paths
 //     that land here).
 func reconstruct(payload map[string]any, disclosures [][]byte, h stdcrypto.Hash) (map[string]any, int, error) {
@@ -116,7 +116,7 @@ func (w *walker) object(m map[string]any) (map[string]any, error) {
 			continue
 		}
 		if k == claimEllipsis {
-			// [SD-JWT §4.2.2] reserves "..." exclusively for the array-element
+			// [SD-JWT §4.2.4.2] reserves "..." exclusively for the array-element
 			// digest wrapper ({"...": "<digest>"}), which is consumed entirely
 			// inside array() and never reaches this loop. A literal "..." key
 			// surviving to here means either (a) it appears directly as a
@@ -177,7 +177,7 @@ func (w *walker) object(m map[string]any) (map[string]any, error) {
 }
 
 // array processes one JSON array: an element shaped {"...": <digest>} is an
-// array-element disclosure wrapper ([SD-JWT §4.2.2]) — resolved or, for a
+// array-element disclosure wrapper ([SD-JWT §4.2.4.2]) — resolved or, for a
 // decoy, omitted; every other element is recursed into unchanged.
 func (w *walker) array(a []any) ([]any, error) {
 	out := make([]any, 0, len(a))
@@ -210,7 +210,7 @@ func (w *walker) array(a []any) ([]any, error) {
 }
 
 // arrayDigest reports whether e is an array-element disclosure wrapper
-// {"...": "<digest>"} ([SD-JWT §4.2.2]) and, if so, returns its digest.
+// {"...": "<digest>"} ([SD-JWT §4.2.4.2]) and, if so, returns its digest.
 func arrayDigest(e any) (string, bool) {
 	m, ok := e.(map[string]any)
 	if !ok || len(m) != 1 {

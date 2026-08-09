@@ -16,9 +16,9 @@ const (
 
 	hdrTyp = "typ" // JOSE protected header
 
-	claimSD         = "_sd"         // [SD-JWT §4.2.4] digest array
+	claimSD         = "_sd"         // [SD-JWT §4.2.4.1] digest array
 	claimSDAlg      = "_sd_alg"     // [SD-JWT §4.1.1] hash-name
-	claimEllipsis   = "..."         // [SD-JWT §4.2.2] array-element digest wrapper
+	claimEllipsis   = "..."         // [SD-JWT §4.2.4.2] array-element digest wrapper
 	claimVCT        = "vct"         // [SD-JWT VC draft-18 §2.2.2]
 	claimISS        = "iss"         // RFC 7519
 	claimEXP        = "exp"         // RFC 7519

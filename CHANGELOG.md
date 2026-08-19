@@ -21,3 +21,5 @@ Additive: existing code compiles and behaves exactly as before.
 
 A caller that acted on the peeked value should confirm it equals the verified one; the
 absence of `iat` is legitimate and must not be treated as an error.
+
+- Dependency update

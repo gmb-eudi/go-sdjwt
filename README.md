@@ -18,6 +18,11 @@ façade for issuers and test wallets.
 - `NewIssuer(kp, keyID, WithChain(chain))` embeds an x5c certificate chain
   (leaf first) in every issued credential's JWS header (RFC 7515 §4.1.6); the
   two-argument `NewIssuer(kp, keyID)` is unchanged and embeds no x5c.
+- `PeekResult.IAT` carries the credential's claimed signing time (nil when
+  absent — `iat` is OPTIONAL), so a caller resolving the issuer key from `x5c`
+  can choose which instant to validate that chain at. `Verify` returns the
+  authenticated value as `VerifiedCredential.IssuedAt`; a caller that acted on
+  the peeked one must confirm the two agree.
 - `Peek([]byte) (*PeekResult, error)` is a pre-trust structural read: it
   returns typ / x5c chain / iss / vct / disclosure count WITHOUT verifying the
   signature, digests, or validity, so a caller can resolve the issuer key from

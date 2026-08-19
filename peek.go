@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	eudicrypto "github.com/gmb-eudi/go-eudi-crypto"
 )
@@ -22,11 +23,20 @@ import (
 // (Named PeekResult rather than Peek because Go forbids a type and the Peek
 // function sharing one identifier in this package.)
 type PeekResult struct {
-	Typ             string              // protected header "typ" ([RFC 7515 §4.1]), unverified
-	X5C             []*x509.Certificate // protected header x5c ([RFC 7515 §4.1.6]), leaf first; nil if absent; NOT validated against any anchor
-	Iss             string              // payload "iss" ([SD-JWT VC draft-18 §2.2.2]), read WITHOUT signature verification
-	VCT             string              // payload "vct" ([SD-JWT VC draft-18 §2.2.2]), read WITHOUT signature verification
-	DisclosureCount int                 // number of ~-separated disclosure segments
+	Typ string              // protected header "typ" ([RFC 7515 §4.1]), unverified
+	X5C []*x509.Certificate // protected header x5c ([RFC 7515 §4.1.6]), leaf first; nil if absent; NOT validated against any anchor
+	Iss string              // payload "iss" ([SD-JWT VC draft-18 §2.2.2]), read WITHOUT signature verification
+	VCT string              // payload "vct" ([SD-JWT VC draft-18 §2.2.2]), read WITHOUT signature verification
+	// IAT is the payload "iat" — the signing time the credential claims — read
+	// WITHOUT signature verification, nil when absent (it is OPTIONAL in
+	// [SD-JWT VC draft-18 §2.2.2.3]). It exists for the same reason X5C does: a
+	// caller resolving the issuer key may need to know which instant to judge the
+	// certificate path at, and that instant is only readable before Verify can
+	// run. Like every other field here it is a claim, not a fact — Verify returns
+	// the authenticated value as VerifiedCredential.IssuedAt, and a caller that
+	// acted on this one must confirm the two agree.
+	IAT             *time.Time
+	DisclosureCount int // number of ~-separated disclosure segments
 }
 
 // Peek reads the structural fields of a combined-format SD-JWT presentation
@@ -58,7 +68,7 @@ func Peek(presentation []byte) (*PeekResult, error) {
 		return nil, fmt.Errorf("%w: issuer x5c: %v", ErrMalformed, err)
 	}
 	typ, _ := hdr[hdrTyp].(string)
-	iss, vct, err := peekIssVCT(p.issuer)
+	iss, vct, iat, err := peekIssVCT(p.issuer)
 	if err != nil {
 		return nil, err
 	}
@@ -67,6 +77,7 @@ func Peek(presentation []byte) (*PeekResult, error) {
 		X5C:             x5c,
 		Iss:             iss,
 		VCT:             vct,
+		IAT:             iat,
 		DisclosureCount: len(p.disclosures),
 	}, nil
 }
@@ -75,28 +86,35 @@ func Peek(presentation []byte) (*PeekResult, error) {
 // the three '.'-separated parts) and reads ONLY iss/vct — never the full claim
 // set (a peek, not a parse). No signature is checked. Fail closed on an
 // undecodable segment or non-JSON payload.
-func peekIssVCT(issuerJWS []byte) (iss, vct string, err error) {
+func peekIssVCT(issuerJWS []byte) (iss, vct string, iat *time.Time, err error) {
 	segs := bytes.Split(issuerJWS, []byte("."))
 	if len(segs) != 3 {
 		// splitCombined already guarantees a 3-segment issuer JWS; this is
 		// defense in depth so the payload index below is always valid.
-		return "", "", fmt.Errorf("%w: issuer JWT is not a compact JWS", ErrMalformed)
+		return "", "", nil, fmt.Errorf("%w: issuer JWT is not a compact JWS", ErrMalformed)
 	}
 	raw, err := base64.RawURLEncoding.DecodeString(string(segs[1]))
 	if err != nil {
-		return "", "", fmt.Errorf("%w: issuer payload segment", ErrMalformed)
+		return "", "", nil, fmt.Errorf("%w: issuer payload segment", ErrMalformed)
 	}
-	// Only iss/vct are extracted; other claim values are intentionally never
-	// decoded or exposed pre-verification (never expose claim values before verification).
+	// Only iss/vct/iat are extracted; other claim values are intentionally never
+	// decoded or exposed pre-verification (never expose claim values before
+	// verification). iat is credential metadata, not an attribute of the person,
+	// so it sits on the same side of that boundary as iss and vct.
 	var body struct {
-		Iss string `json:"iss"`
-		VCT string `json:"vct"`
+		Iss string   `json:"iss"`
+		VCT string   `json:"vct"`
+		IAT *float64 `json:"iat"`
 	}
 	if err := json.Unmarshal(raw, &body); err != nil {
 		// Static suffix only: a *json.SyntaxError can echo bytes of the decoded
 		// payload (which carries claim values) — never wrap the underlying err
 		// (no attribute values in errors — GDPR; same discipline as decodeJSONObject in verify.go).
-		return "", "", fmt.Errorf("%w: issuer payload is not valid JSON", ErrMalformed)
+		return "", "", nil, fmt.Errorf("%w: issuer payload is not valid JSON", ErrMalformed)
 	}
-	return body.Iss, body.VCT, nil
+	if body.IAT != nil {
+		t := time.Unix(int64(*body.IAT), 0).UTC()
+		return body.Iss, body.VCT, &t, nil
+	}
+	return body.Iss, body.VCT, nil, nil
 }

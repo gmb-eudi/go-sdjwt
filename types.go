@@ -23,7 +23,7 @@ const (
 	claimISS        = "iss"         // RFC 7519
 	claimEXP        = "exp"         // RFC 7519
 	claimNBF        = "nbf"         // RFC 7519
-	claimIAT        = "iat"         // RFC 7519
+	claimIAT        = "iat"         // RFC 7519; OPTIONAL in [SD-JWT VC draft-18 §2.2.2.3]
 	claimCNF        = "cnf"         // RFC 7800 confirmation
 	claimJWK        = "jwk"         // RFC 7800 cnf member
 	claimStatus     = "status"      // [Token Status List §5]
@@ -59,12 +59,18 @@ type VerifyInput struct {
 // key (README target says jwk.Key; exposed here as crypto.PublicKey for
 // safety — see the README corrections).
 type VerifiedCredential struct {
-	VCT          string
-	Claims       map[string]any
-	CNF          stdcrypto.PublicKey
-	Status       *StatusRef
-	NotBefore    time.Time
-	Expiry       time.Time
+	VCT       string
+	Claims    map[string]any
+	CNF       stdcrypto.PublicKey
+	Status    *StatusRef
+	NotBefore time.Time
+	Expiry    time.Time
+	// IssuedAt is the verified "iat" — the time the issuer says it signed this
+	// credential. Zero when absent, which is legitimate: iat is OPTIONAL in
+	// [SD-JWT VC draft-18 §2.2.2.3]. No validity rule is applied to it here,
+	// because neither SD-JWT VC nor its ecosystem profiles specify a validation
+	// time for the x5c path — what a caller does with it is the caller's policy.
+	IssuedAt     time.Time
 	SDHash       string // base64url digest over the presented issuer-JWT+disclosures (audit)
 	DecoyDigests int
 }

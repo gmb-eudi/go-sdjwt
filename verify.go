@@ -134,6 +134,14 @@ func (v *Verifier) checkValidity(payload map[string]any, vc *VerifiedCredential)
 		}
 		vc.NotBefore = nbf
 	}
+	if raw, ok := payload[claimIAT]; ok {
+		iat, ok := unixTime(raw)
+		if !ok {
+			return fmt.Errorf("%w: iat not a number", ErrMalformed)
+		}
+		// Surfaced, not judged — see VerifiedCredential.IssuedAt.
+		vc.IssuedAt = iat
+	}
 	return nil
 }
 

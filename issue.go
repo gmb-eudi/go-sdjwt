@@ -24,7 +24,7 @@ var reservedClaims = map[string]bool{
 // with the Issuer's key. Claims listed in tmpl.Selective are blinded into
 // _sd digests (objects) / "..." wrappers (arrays); everything else is in the
 // clear. Disclosures are emitted sorted (order-independent for verification;
-// avoids leaking insertion order). [SD-JWT §4]; [SD-JWT VC §3].
+// avoids leaking insertion order). [SD-JWT §4]; [SD-JWT VC draft-18 §2].
 func (i *Issuer) Issue(ctx context.Context, tmpl CredentialTemplate) ([]byte, error) {
 	if tmpl.VCT == "" || tmpl.Issuer == "" {
 		return nil, fmt.Errorf("%w: vct and iss are required", ErrTemplate)

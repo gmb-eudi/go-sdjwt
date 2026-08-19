@@ -143,3 +143,69 @@ func TestVerifyExtractsCNF(t *testing.T) {
 		t.Error("VerifiedCredential.CNF is not the holder key")
 	}
 }
+
+// The signing time must be readable BEFORE verification: the issuer key is
+// resolved from the certificate chain, and the caller may need to know which
+// instant to judge that chain at — a document signer rotates while the
+// credentials it signed stay in wallets. It must also come back authenticated,
+// so the caller can confirm the value it acted on is the value the issuer signed.
+func TestPeekAndVerifyAgreeOnTheSigningTime(t *testing.T) {
+	issKey := newECKey(t)
+	kp := staticProvider("iss", issKey)
+	payload, disc := basePayload(t, nil)
+	want := time.Date(2026, 7, 4, 10, 0, 0, 0, time.UTC)
+	pres := assemble(signIssuerJWT(t, kp, "iss", typSDJWT, payload), disc)
+
+	pr, err := Peek(pres)
+	if err != nil {
+		t.Fatalf("Peek: %v", err)
+	}
+	if pr.IAT == nil {
+		t.Fatal("Peek did not surface the claimed signing time — a caller cannot choose a validation time without it")
+	}
+	if !pr.IAT.Equal(want) {
+		t.Fatalf("Peek IAT = %s, want %s", pr.IAT, want)
+	}
+
+	vc, err := NewVerifier(WithClock(fixedClock())).Verify(context.Background(), VerifyInput{
+		Presentation: pres,
+		IssuerKey:    issKey.Public(),
+	})
+	if err != nil {
+		t.Fatalf("Verify: %v", err)
+	}
+	if !vc.IssuedAt.Equal(want) {
+		t.Fatalf("verified IssuedAt = %s, want %s", vc.IssuedAt, want)
+	}
+	if !pr.IAT.Equal(vc.IssuedAt) {
+		t.Fatal("the peeked signing time and the verified one disagree")
+	}
+}
+
+// iat is OPTIONAL, so its absence is not an error: the caller falls back to a
+// validation time of its own rather than refusing the credential.
+func TestPeekAbsentSigningTimeIsNil(t *testing.T) {
+	issKey := newECKey(t)
+	kp := staticProvider("iss", issKey)
+	payload, disc := basePayload(t, nil)
+	delete(payload, claimIAT)
+	pres := assemble(signIssuerJWT(t, kp, "iss", typSDJWT, payload), disc)
+
+	pr, err := Peek(pres)
+	if err != nil {
+		t.Fatalf("Peek: %v", err)
+	}
+	if pr.IAT != nil {
+		t.Fatalf("absent iat must peek as nil, got %s", pr.IAT)
+	}
+	vc, err := NewVerifier(WithClock(fixedClock())).Verify(context.Background(), VerifyInput{
+		Presentation: pres,
+		IssuerKey:    issKey.Public(),
+	})
+	if err != nil {
+		t.Fatalf("a credential without iat is still valid: %v", err)
+	}
+	if !vc.IssuedAt.IsZero() {
+		t.Fatalf("absent iat must verify as the zero time, got %s", vc.IssuedAt)
+	}
+}

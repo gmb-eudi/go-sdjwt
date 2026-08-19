@@ -41,7 +41,7 @@ func pidTemplate(now time.Time, holder *ecdsa.PrivateKey) sdjwt.CredentialTempla
 			"nationalities": []any{"British", "Betelgeusian"},
 		},
 		// address and nationalities are selective at BOTH the container level
-		// and the leaf level (recursive disclosure, [SD-JWT §5.9]): hiding only
+		// and the leaf level (recursive disclosure, [SD-JWT §4.2.6]): hiding only
 		// the leaves would still let a verifier see the container shape
 		// (an empty {}/[] claim) even when nothing under it is disclosed.
 		// Marking the container itself selective means its own presence

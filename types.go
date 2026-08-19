@@ -10,20 +10,20 @@ import (
 // are never hard-coded; those come from go-eudi-crypto). Kept as constants so the code
 // reads against the spec.
 const (
-	typSDJWT   = "dc+sd-jwt" // [SD-JWT VC §3.2.1] typ
+	typSDJWT   = "dc+sd-jwt" // [SD-JWT VC draft-18 §2.2.1] typ
 	typVCSDJWT = "vc+sd-jwt" // legacy typ, accepted only behind WithLegacyVCTyp
 	typKB      = "kb+jwt"    // [SD-JWT §4.3] KB-JWT typ
 
 	hdrTyp = "typ" // JOSE protected header
 
-	claimSD         = "_sd"         // [SD-JWT §4.2.4] digest array
+	claimSD         = "_sd"         // [SD-JWT §4.2.4.1] digest array
 	claimSDAlg      = "_sd_alg"     // [SD-JWT §4.1.1] hash-name
-	claimEllipsis   = "..."         // [SD-JWT §4.2.2] array-element digest wrapper
-	claimVCT        = "vct"         // [SD-JWT VC §3.2.2]
+	claimEllipsis   = "..."         // [SD-JWT §4.2.4.2] array-element digest wrapper
+	claimVCT        = "vct"         // [SD-JWT VC draft-18 §2.2.2]
 	claimISS        = "iss"         // RFC 7519
 	claimEXP        = "exp"         // RFC 7519
 	claimNBF        = "nbf"         // RFC 7519
-	claimIAT        = "iat"         // RFC 7519
+	claimIAT        = "iat"         // RFC 7519; OPTIONAL in [SD-JWT VC draft-18 §2.2.2.3]
 	claimCNF        = "cnf"         // RFC 7800 confirmation
 	claimJWK        = "jwk"         // RFC 7800 cnf member
 	claimStatus     = "status"      // [Token Status List §5]
@@ -59,12 +59,18 @@ type VerifyInput struct {
 // key (README target says jwk.Key; exposed here as crypto.PublicKey for
 // safety — see the README corrections).
 type VerifiedCredential struct {
-	VCT          string
-	Claims       map[string]any
-	CNF          stdcrypto.PublicKey
-	Status       *StatusRef
-	NotBefore    time.Time
-	Expiry       time.Time
+	VCT       string
+	Claims    map[string]any
+	CNF       stdcrypto.PublicKey
+	Status    *StatusRef
+	NotBefore time.Time
+	Expiry    time.Time
+	// IssuedAt is the verified "iat" — the time the issuer says it signed this
+	// credential. Zero when absent, which is legitimate: iat is OPTIONAL in
+	// [SD-JWT VC draft-18 §2.2.2.3]. No validity rule is applied to it here,
+	// because neither SD-JWT VC nor its ecosystem profiles specify a validation
+	// time for the x5c path — what a caller does with it is the caller's policy.
+	IssuedAt     time.Time
 	SDHash       string // base64url digest over the presented issuer-JWT+disclosures (audit)
 	DecoyDigests int
 }

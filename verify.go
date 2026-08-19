@@ -11,7 +11,7 @@ import (
 	eudicrypto "github.com/gmb-eudi/go-eudi-crypto"
 )
 
-// Verify verifies an SD-JWT / SD-JWT VC presentation ([SD-JWT §7]; [SD-JWT VC §3]).
+// Verify verifies an SD-JWT / SD-JWT VC presentation ([SD-JWT §7]; [SD-JWT VC draft-18 §2]).
 // Pipeline: split combined format → verify issuer JWS (go-eudi-crypto,
 // alg derived from IssuerKey) → enforce typ → require iss/vct → check
 // validity window → extract cnf holder key → reconstruct disclosed claims by
@@ -36,7 +36,8 @@ func (v *Verifier) Verify(ctx context.Context, in VerifyInput) (*VerifiedCredent
 	if err != nil {
 		return nil, err
 	}
-	// [SD-JWT VC §3.2]: iss and vct are required.
+	// [SD-JWT VC draft-18 §2.2.2]: vct is REQUIRED; iss is OPTIONAL there, but this
+	// library requires it too — see the note on ErrMissingIssuer.
 	iss, _ := payload[claimISS].(string)
 	if iss == "" {
 		return nil, fmt.Errorf("%w", ErrMissingIssuer)
@@ -49,7 +50,7 @@ func (v *Verifier) Verify(ctx context.Context, in VerifyInput) (*VerifiedCredent
 	if err := v.checkValidity(payload, vc); err != nil {
 		return nil, err
 	}
-	// cnf holder-binding key (RFC 7800; [SD-JWT VC §3.5]).
+	// cnf holder-binding key (RFC 7800; [SD-JWT VC draft-18 §2.2.2]).
 	holderKey, err := extractCNF(payload)
 	if err != nil {
 		return nil, err
@@ -97,7 +98,7 @@ func (v *Verifier) Verify(ctx context.Context, in VerifyInput) (*VerifiedCredent
 	return vc, nil
 }
 
-// checkTyp enforces the SD-JWT VC typ header ([SD-JWT VC §3.2.1]): dc+sd-jwt,
+// checkTyp enforces the SD-JWT VC typ header ([SD-JWT VC draft-18 §2.2.1]): dc+sd-jwt,
 // or legacy vc+sd-jwt only when WithLegacyVCTyp was set.
 func (v *Verifier) checkTyp(hdr eudicrypto.Header) error {
 	t, _ := hdr[hdrTyp].(string)
@@ -132,6 +133,14 @@ func (v *Verifier) checkValidity(payload map[string]any, vc *VerifiedCredential)
 			return fmt.Errorf("%w", ErrNotYetValid)
 		}
 		vc.NotBefore = nbf
+	}
+	if raw, ok := payload[claimIAT]; ok {
+		iat, ok := unixTime(raw)
+		if !ok {
+			return fmt.Errorf("%w: iat not a number", ErrMalformed)
+		}
+		// Surfaced, not judged — see VerifiedCredential.IssuedAt.
+		vc.IssuedAt = iat
 	}
 	return nil
 }

@@ -24,7 +24,7 @@ type disclosure struct {
 func decodeDisclosure(raw []byte) (disclosure, error) {
 	dec, err := base64.RawURLEncoding.DecodeString(string(raw))
 	if err != nil {
-		return disclosure{}, fmt.Errorf("%w: base64url: %v", ErrDisclosure, err)
+		return disclosure{}, fmt.Errorf("%w: base64url: %w", ErrDisclosure, err)
 	}
 	var arr []any
 	d := json.NewDecoder(bytes.NewReader(dec))
@@ -69,7 +69,7 @@ func hashForSDAlg(pol eudicrypto.Policy, payload map[string]any) (stdcrypto.Hash
 	}
 	h, err := pol.HashForName(name)
 	if err != nil {
-		return 0, fmt.Errorf("%w: %v", ErrHashAlg, err)
+		return 0, fmt.Errorf("%w: %w", ErrHashAlg, err)
 	}
 	return h, nil
 }

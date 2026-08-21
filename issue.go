@@ -48,7 +48,7 @@ func (i *Issuer) Issue(ctx context.Context, tmpl CredentialTemplate) ([]byte, er
 	// step without a hash-name literal here (no hard-coded algorithm literal).
 	h, err := eudicrypto.ECCG().HashForName(tmpl.HashName)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrTemplate, err)
+		return nil, fmt.Errorf("%w: %w", ErrTemplate, err)
 	}
 
 	b := &sdBuilder{sel: map[string]bool{}, used: map[string]bool{}, h: h}
@@ -88,7 +88,7 @@ func (i *Issuer) Issue(ctx context.Context, tmpl CredentialTemplate) ([]byte, er
 	if tmpl.HolderKey != nil {
 		jwk, err := eudicrypto.ECPublicKeyToJWK(tmpl.HolderKey)
 		if err != nil {
-			return nil, fmt.Errorf("%w: holder key: %v", ErrTemplate, err)
+			return nil, fmt.Errorf("%w: holder key: %w", ErrTemplate, err)
 		}
 		payload[claimCNF] = map[string]any{claimJWK: jwk}
 	}

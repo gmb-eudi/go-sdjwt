@@ -61,7 +61,7 @@ func PresentKB(ctx context.Context, holder stdcrypto.Signer, sdJWT []byte, discl
 	}
 	raw, err := json.Marshal(kbBody)
 	if err != nil {
-		return nil, fmt.Errorf("%w: kb body: %v", ErrMalformed, err)
+		return nil, fmt.Errorf("%w: kb body: %w", ErrMalformed, err)
 	}
 	kb, err := eudicrypto.SignJWS(ctx, signerProvider{holder}, "", map[string]any{hdrTyp: typKB}, raw)
 	if err != nil {
@@ -81,7 +81,7 @@ func issuerPayloadUnverified(issuer []byte) (map[string]any, error) {
 	}
 	raw, err := base64.RawURLEncoding.DecodeString(string(parts[1]))
 	if err != nil {
-		return nil, fmt.Errorf("%w: issuer payload: %v", ErrMalformed, err)
+		return nil, fmt.Errorf("%w: issuer payload: %w", ErrMalformed, err)
 	}
 	return decodeJSONObject(raw)
 }

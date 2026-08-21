@@ -61,11 +61,11 @@ func Peek(presentation []byte) (*PeekResult, error) {
 	// payload path below, which uses a static suffix.
 	hdr, err := eudicrypto.ParseJWSHeader(p.issuer)
 	if err != nil {
-		return nil, fmt.Errorf("%w: issuer header: %v", ErrMalformed, err)
+		return nil, fmt.Errorf("%w: issuer header: %w", ErrMalformed, err)
 	}
 	x5c, err := eudicrypto.X5CFromHeader(hdr)
 	if err != nil {
-		return nil, fmt.Errorf("%w: issuer x5c: %v", ErrMalformed, err)
+		return nil, fmt.Errorf("%w: issuer x5c: %w", ErrMalformed, err)
 	}
 	typ, _ := hdr[hdrTyp].(string)
 	iss, vct, iat, err := peekIssVCT(p.issuer)

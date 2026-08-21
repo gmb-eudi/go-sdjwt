@@ -15,7 +15,7 @@ import (
 func (v *Verifier) verifyKB(p *parsed, holderKey stdcrypto.PublicKey, in VerifyInput, h stdcrypto.Hash) error {
 	payloadBytes, hdr, err := eudicrypto.VerifyJWS(p.kb, holderKey)
 	if err != nil {
-		return fmt.Errorf("%w: %v", ErrKBSignature, err)
+		return fmt.Errorf("%w: %w", ErrKBSignature, err)
 	}
 	if t, _ := hdr[hdrTyp].(string); t != typKB {
 		return fmt.Errorf("%w: %q", ErrKBType, t)

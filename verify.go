@@ -27,7 +27,7 @@ func (v *Verifier) Verify(ctx context.Context, in VerifyInput) (*VerifiedCredent
 	// Issuer JWS (RFC 7515; key resolved by caller via trust layer).
 	payloadBytes, hdr, err := eudicrypto.VerifyJWS(p.issuer, in.IssuerKey)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrIssuerSignature, err)
+		return nil, fmt.Errorf("%w: %w", ErrIssuerSignature, err)
 	}
 	if err := v.checkTyp(hdr); err != nil {
 		return nil, err
@@ -163,11 +163,11 @@ func extractCNF(payload map[string]any) (stdcrypto.PublicKey, error) {
 	}
 	jb, err := json.Marshal(jwkVal)
 	if err != nil {
-		return nil, fmt.Errorf("%w: cnf jwk: %v", ErrMalformed, err)
+		return nil, fmt.Errorf("%w: cnf jwk: %w", ErrMalformed, err)
 	}
 	key, err := eudicrypto.ParseECPublicKeyJWK(jb)
 	if err != nil {
-		return nil, fmt.Errorf("%w: cnf jwk: %v", ErrMalformed, err)
+		return nil, fmt.Errorf("%w: cnf jwk: %w", ErrMalformed, err)
 	}
 	return key, nil
 }

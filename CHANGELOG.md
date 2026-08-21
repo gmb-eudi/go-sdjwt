@@ -3,6 +3,43 @@
 Notable changes to this library, newest first. Versions are git tags; this file is written
 for whoever bumps the dependency.
 
+## v0.0.7
+
+Compatible: no signature changes, no message-text changes, nothing that passed before now
+fails.
+
+### Changed
+
+- **Errors now wrap their cause as well as their sentinel — 12 sites** in `disclosure.go`,
+  `issue.go`, `kb.go`, `peek.go`, `present.go` and `verify.go`. Each was built as
+  `fmt.Errorf("%w: …: %v", ErrSentinel, err)`: the sentinel wrapped, the cause printed into
+  the string and then unreachable. Both are now `%w`.
+
+  The sentinels here say *which part* of the credential was at fault; the cause says why. A
+  disclosure that is not valid base64url and one whose JSON is malformed are both
+  `ErrDisclosure` today, and now they are distinguishable:
+
+  ```go
+  var b64 base64.CorruptInputError
+  if errors.Is(err, ErrDisclosure) && errors.As(err, &b64) { /* encoding, not structure */ }
+  ```
+
+  `errors.Is(err, ErrDisclosure)` / `ErrHashAlg` / `ErrTemplate` / `ErrKBSignature` /
+  `ErrMalformed` / `ErrIssuerSignature` all still hold and every rendered message is
+  byte-identical (`%v` and `%w` print an error the same way), so no existing caller needs to
+  change.
+
+### Dependencies
+
+- `github.com/lestrrat-go/dsig` v1.3.0 → v1.4.0 (indirect).
+
+### Notes
+
+- The `go` directive is now `1.26.6`, which is the minimum Go version a consumer needs. The
+  previous `1.26` resolved to whatever patch the toolchain happened to have; the exact patch
+  is pinned because earlier 1.26 releases carry standard-library security fixes this library's
+  callers should not silently miss.
+
 ## v0.0.6
 
 Additive: existing code compiles and behaves exactly as before.
